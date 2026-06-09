@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Relevamiento Dia del Padre · Banco Familiar</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --azul:#003087;--azul-d:#00205e;--rojo:#C8102E;
+  --verde:#1e7e34;--gris-1:#f8f9fa;--gris-2:#e8eaed;--gris-3:#9aa0a6;
+  --txt:#202124;--radius:12px;--shadow:0 2px 12px rgba(0,0,0,.1);
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f1f3f4;color:var(--txt);min-height:100vh}
+
+.header{background:var(--azul);padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.header img.logo{width:46px;height:46px;object-fit:contain;border-radius:8px;background:#fff;padding:2px}
+.header h1{color:#fff;font-size:1.05rem;font-weight:700;line-height:1.2}
+.header p{color:rgba(255,255,255,.72);font-size:.73rem;margin-top:2px}
+
+.steps{display:flex;background:#fff;border-bottom:2px solid var(--gris-2);padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.step-btn{flex-shrink:0;padding:11px 12px;font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--gris-3);border:none;background:none;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;text-transform:uppercase;cursor:default}
+.step-btn.active{color:var(--azul);border-bottom-color:var(--azul)}
+.step-btn.done{color:var(--verde);border-bottom-color:var(--verde);cursor:pointer}
+
+.container{max-width:660px;margin:0 auto;padding:16px 14px 90px}
+.paso{display:none}.paso.active{display:block}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+.card-title{font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--azul);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--gris-2)}
+
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:.82rem;font-weight:600;color:#5f6368;margin-bottom:8px;line-height:1.4}
+.req{color:var(--rojo);margin-left:2px}
+.opt{font-size:.72rem;font-weight:400;color:var(--gris-3);margin-left:4px}
+
+.fecha-box{padding:10px 14px;border:1.5px solid var(--gris-2);border-radius:8px;font-size:.9rem;background:var(--gris-1);color:var(--azul);font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.fecha-box small{font-size:.7rem;color:var(--gris-3);font-weight:400}
+
+select,.search-input{width:100%;padding:11px 14px;border:1.5px solid var(--gris-2);border-radius:8px;font-size:.94rem;color:var(--txt);background:var(--gris-1);-webkit-appearance:none;appearance:none;font-family:inherit;transition:border-color .18s}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:36px;cursor:pointer}
+select:focus,.search-input:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(0,48,135,.12);background:#fff}
+
+.search-wrap{position:relative}
+.dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--azul);border-radius:8px;max-height:220px;overflow-y:auto;box-shadow:0 4px 18px rgba(0,0,0,.13);z-index:50}
+.dropdown.open{display:block}
+.dropdown-item{padding:10px 14px;cursor:pointer;font-size:.9rem;border-bottom:1px solid var(--gris-2);transition:background .15s}
+.dropdown-item:last-child{border-bottom:none}
+.dropdown-item:hover{background:#e8f0fe;color:var(--azul)}
+.dropdown-item strong{color:var(--azul)}
+.dropdown-item small{display:block;font-size:.75rem;color:var(--gris-3);margin-top:1px}
+.local-badge{display:none;margin-top:8px;padding:10px 14px;background:#e8f0fe;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--azul-d);align-items:center;gap:8px}
+.local-badge.show{display:flex}
+.local-badge .clear{margin-left:auto;cursor:pointer;font-size:.76rem;color:var(--gris-3);border:none;background:none;padding:2px 6px}
+.local-badge .clear:hover{color:var(--rojo)}
+
+.opciones{display:flex;flex-direction:column;gap:7px}
+.opcion{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1.5px solid var(--gris-2);border-radius:8px;cursor:pointer;background:var(--gris-1);transition:all .15s;font-size:.9rem;line-height:1.3;user-select:none}
+.opcion.sel{border-color:var(--azul);background:#e8f0fe;color:var(--azul);font-weight:600}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--gris-3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opcion.sel .radio{border-color:var(--azul);background:var(--azul)}
+.opcion.sel .radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+
+.sino-btns{display:flex;gap:8px;margin-bottom:4px}
+.sino-btn{flex:1;padding:12px;border:2px solid var(--gris-2);border-radius:8px;background:var(--gris-1);font-size:.95rem;font-weight:700;cursor:pointer;text-align:center;transition:all .15s;color:#5f6368;user-select:none}
+.sino-btn.si{border-color:var(--verde);background:#e6f4ea;color:var(--verde)}
+.sino-btn.no{border-color:var(--rojo);background:#fce8e6;color:var(--rojo)}
+
+.ref-strip{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.ref-strip img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1.5px solid var(--gris-2);flex-shrink:0}
+.ref-strip-label{font-size:.68rem;color:var(--gris-3);text-align:center;margin-top:-2px;margin-bottom:10px}
+
+.chk-lista{display:flex;flex-direction:column;gap:8px}
+.chk-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--gris-2);border-radius:8px;background:var(--gris-1);transition:all .15s;user-select:none}
+.chk-text{flex:1}
+.chk-text strong{display:block;font-size:.88rem;color:var(--txt);line-height:1.3}
+.chk-text small{font-size:.74rem;color:var(--gris-3);display:block;margin-top:1px}
+
+.mat-opciones{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.mat-opt{padding:6px 12px;border:1.5px solid var(--gris-2);border-radius:20px;font-size:.8rem;font-weight:600;cursor:pointer;background:var(--gris-1);color:#5f6368;transition:all .15s;user-select:none}
+.mat-opt.colocado{border-color:var(--verde);background:#e6f4ea;color:var(--verde)}
+.mat-opt.faltante{border-color:var(--rojo);background:#fce8e6;color:var(--rojo)}
+.mat-opt.no-corresponde{border-color:var(--gris-3);background:#f1f3f4;color:var(--gris-3)}
+
+.chk-simple{display:flex;flex-direction:column;gap:7px}
+.chk-s{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--gris-2);border-radius:8px;cursor:pointer;background:var(--gris-1);font-size:.9rem;transition:all .15s;user-select:none}
+.chk-s.sel{border-color:var(--azul);background:#e8f0fe;color:var(--azul);font-weight:600}
+.chk-box{width:20px;height:20px;border-radius:5px;border:2px solid var(--gris-3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk-s.sel .chk-box{border-color:var(--azul);background:var(--azul)}
+.chk-s.sel .chk-box::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+
+.cond{display:none}.cond.on{display:block}
+.obs-wrap{display:none;margin-top:8px}.obs-wrap.on{display:block}
+.obs-wrap label{font-size:.78rem;color:var(--gris-3);font-weight:500;display:block;margin-bottom:5px}
+
+.foto-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.foto-btn{position:relative;padding:14px 10px 12px;border:1.5px solid var(--gris-2);border-radius:12px;background:var(--gris-1);cursor:pointer;text-align:center;transition:all .18s;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:6px}
+.foto-btn:hover{border-color:var(--azul);background:#f0f4ff}
+.foto-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.foto-btn img.vec{width:52px;height:52px;object-fit:contain;pointer-events:none}
+.foto-btn span{font-size:.82rem;font-weight:600;color:inherit}
+.progress-bar{height:4px;background:var(--gris-2);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;border-radius:4px;transition:width .3s;background:var(--azul)}
+.foto-counter{font-size:.81rem;font-weight:600;text-align:center;margin-bottom:10px}
+.foto-counter.warn{color:#856404}.foto-counter.ok{color:var(--verde)}
+.fotos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:2px solid var(--gris-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .num{position:absolute;bottom:4px;left:5px;background:rgba(0,0,0,.55);color:#fff;font-size:.66rem;font-weight:700;padding:1px 5px;border-radius:4px}
+.thumb .del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:22px;text-align:center}
+.thumb .del:hover{background:var(--rojo)}
+
+textarea{width:100%;padding:11px 14px;border:1.5px solid var(--gris-2);border-radius:8px;font-size:.94rem;color:var(--txt);background:var(--gris-1);resize:vertical;min-height:90px;font-family:inherit;transition:border-color .18s}
+textarea:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(0,48,135,.12);background:#fff}
+
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--gris-2);padding:10px 16px;display:flex;gap:10px;z-index:100}
+.btn-nav{flex:1;padding:13px;border-radius:10px;font-size:.94rem;font-weight:700;border:none;cursor:pointer;transition:all .25s}
+.btn-prev{background:var(--gris-2);color:#5f6368}
+.btn-next{background:var(--azul);color:#fff}
+.btn-next:hover:not(:disabled):not(.incompleto){background:var(--azul-d)}
+.btn-next:disabled{background:var(--gris-3);cursor:not-allowed}
+.btn-next.incompleto{background:#fca5a5;color:#7f1d1d;cursor:not-allowed;animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.alerta{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:#7f1d1d;font-weight:500;line-height:1.5}
+.alerta.on{display:block}
+.alerta ul{margin-top:4px;padding-left:16px}
+.alerta li{margin-bottom:2px}
+
+.draft-banner{background:#fef9e7;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;color:#856404;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.draft-banner button{border:none;background:none;color:var(--rojo);font-size:.78rem;font-weight:700;cursor:pointer;padding:2px 6px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay{position:fixed;inset:0;background:rgba(255,255,255,.93);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:999;font-weight:600;color:var(--azul);font-size:.95rem}
+.overlay.on{display:flex}
+.big-spin{width:48px;height:48px;border:4px solid var(--gris-2);border-top-color:var(--azul);border-radius:50%;animation:spin .8s linear infinite}
+.overlay-sub{font-size:.8rem;color:var(--gris-3);font-weight:400}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);padding:12px 20px;border-radius:10px;color:#fff;font-weight:600;font-size:.9rem;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:9999;min-width:240px;text-align:center;pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--verde)}.toast.err{background:var(--rojo)}
+
+.modal-exito{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-exito.on{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:36px 28px 28px;max-width:340px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.25);animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-box h2{font-size:1.25rem;font-weight:700;color:var(--verde);margin-bottom:8px}
+.modal-box p{font-size:.9rem;color:#5f6368;line-height:1.5;margin-bottom:22px}
+.modal-btn{background:var(--azul);color:#fff;border:none;border-radius:10px;padding:13px 32px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:background .2s}
+.modal-btn:hover{background:var(--azul-d)}
+
+.info-box{font-size:.76rem;color:#1e3a8a;background:#e8f0fe;border-radius:6px;padding:7px 11px;margin-bottom:10px;border-left:3px solid var(--azul);line-height:1.4}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="big-spin"></div>
+  <div id="overlay-msg">Cargando datos...</div>
+  <div class="overlay-sub" id="overlay-sub"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="modal-exito" id="modal-exito">
+  <div class="modal-box">
+    <img src="logo_banco_familiar.png" alt="Banco Familiar" style="width:80px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto">
+    <h2>Relevamiento enviado</h2>
+    <p>El registro de <strong id="modal-local"></strong> fue guardado correctamente.</p>
+    <button class="modal-btn" onclick="cerrarYReset()">Nuevo relevamiento</button>
+  </div>
+</div>
+
+<div class="header">
+  <img class="logo" src="logo_banco_familiar.png" alt="Banco Familiar">
+  <div>
+    <h1>Relevamiento Dia del Padre</h1>
+    <p>Banco Familiar · Control de materiales</p>
+  </div>
+</div>
+
+<div class="steps">
+  <button class="step-btn active" id="tab-0">IDENTIFICACION</button>
+  <button class="step-btn" id="tab-1">LOCAL</button>
+  <button class="step-btn" id="tab-2">MATERIAL BF</button>
+  <button class="step-btn" id="tab-3">COMPETENCIA</button>
+  <button class="step-btn" id="tab-4">CIERRE</button>
+</div>
+
+<div class="container">
+
+<!-- PASO 0 — IDENTIFICACION -->
+<div class="paso active" id="paso-0">
+  <div class="alerta" id="alerta-0"></div>
+  <div class="draft-banner" id="draft-banner" style="display:none">
+    Hay un borrador guardado.
+    <button onclick="limpiarBorrador()">Descartar</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Identificacion</div>
+    <div class="field">
+      <label>Fiscalizador <span class="req">*</span></label>
+      <select id="sel-fiscalizador">
+        <option value="" disabled selected>Seleccionar fiscalizador...</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Fecha de visita</label>
+      <div class="fecha-box">
+        <span id="fecha-hoy"></span>
+        <small>Automatica</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 1 — LOCAL -->
+<div class="paso" id="paso-1">
+  <div class="alerta" id="alerta-1"></div>
+  <div class="card">
+    <div class="card-title">Local</div>
+    <div class="field" id="campo-local">
+      <label>Buscar local <span class="req">*</span></label>
+      <div class="search-wrap">
+        <input type="text" id="buscar-local" class="search-input"
+          placeholder="Escribi tienda o shopping..." autocomplete="off" spellcheck="false">
+        <div class="dropdown" id="dropdown-locales"></div>
+      </div>
+      <div class="local-badge" id="local-badge">
+        <span id="badge-txt"></span>
+        <button class="clear" id="clear-local">cambiar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 2 — MATERIAL BF -->
+<div class="paso" id="paso-2">
+  <div class="alerta" id="alerta-2"></div>
+  <div class="card">
+    <div class="card-title">Material Banco Familiar</div>
+
+    <div class="ref-strip" id="ref-strip">
+      <img src="1-material.png" alt="Material 1">
+      <img src="2-material.png" alt="Material 2">
+      <img src="3-material.png" alt="Material 3">
+    </div>
+    <p class="ref-strip-label">Referencia visual de materiales Dia del Padre</p>
+
+    <div class="field" id="campo-tablentent">
+      <label>Tablentent A4 <span class="req">*</span></label>
+      <div class="mat-opciones">
+        <div class="mat-opt" data-campo="tablentent_a4" data-val="Colocado" onclick="selMatOpt(this,'tablentent_a4','Colocado')">Colocado</div>
+        <div class="mat-opt" data-campo="tablentent_a4" data-val="Faltante" onclick="selMatOpt(this,'tablentent_a4','Faltante')">Faltante</div>
+        <div class="mat-opt" data-campo="tablentent_a4" data-val="No corresponde" onclick="selMatOpt(this,'tablentent_a4','No corresponde')">No corresponde</div>
+      </div>
+    </div>
+
+    <div class="field" id="campo-calco">
+      <label>Calco <span class="req">*</span></label>
+      <div class="mat-opciones">
+        <div class="mat-opt" data-campo="calco" data-val="Colocado" onclick="selMatOpt(this,'calco','Colocado')">Colocado</div>
+        <div class="mat-opt" data-campo="calco" data-val="Faltante" onclick="selMatOpt(this,'calco','Faltante')">Faltante</div>
+        <div class="mat-opt" data-campo="calco" data-val="No corresponde" onclick="selMatOpt(this,'calco','No corresponde')">No corresponde</div>
+      </div>
+    </div>
+
+    <div class="field" id="campo-cubre-sensor">
+      <label>Cubre sensor <span class="req">*</span></label>
+      <div class="mat-opciones">
+        <div class="mat-opt" data-campo="cubre_sensor" data-val="Colocado" onclick="selMatOpt(this,'cubre_sensor','Colocado')">Colocado</div>
+        <div class="mat-opt" data-campo="cubre_sensor" data-val="Faltante" onclick="selMatOpt(this,'cubre_sensor','Faltante')">Faltante</div>
+        <div class="mat-opt" data-campo="cubre_sensor" data-val="No corresponde" onclick="selMatOpt(this,'cubre_sensor','No corresponde')">No corresponde</div>
+      </div>
+    </div>
+
+    <div class="field" id="campo-totem">
+      <label>Totem <span class="req">*</span></label>
+      <div class="mat-opciones">
+        <div class="mat-opt" data-campo="totem" data-val="Colocado" onclick="selMatOpt(this,'totem','Colocado')">Colocado</div>
+        <div class="mat-opt" data-campo="totem" data-val="Faltante" onclick="selMatOpt(this,'totem','Faltante')">Faltante</div>
+        <div class="mat-opt" data-campo="totem" data-val="No corresponde" onclick="selMatOpt(this,'totem','No corresponde')">No corresponde</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:8px">
+      <label>Estado general del material <span class="req">*</span></label>
+      <div class="opciones" id="op-estado-material">
+        <div class="opcion" data-campo="estado_material" data-val="Bueno" onclick="elegirOpcion(this,'estado_material','Bueno')"><div class="radio"></div>Bueno</div>
+        <div class="opcion" data-campo="estado_material" data-val="Deteriorado" onclick="elegirOpcion(this,'estado_material','Deteriorado')"><div class="radio"></div>Deteriorado</div>
+        <div class="opcion" data-campo="estado_material" data-val="Faltante" onclick="elegirOpcion(this,'estado_material','Faltante')"><div class="radio"></div>Faltante</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:8px">
+      <label>El material esta visible para el cliente <span class="req">*</span></label>
+      <div class="sino-btns">
+        <div class="sino-btn" id="sino-visible-si" onclick="sino('visible','si')">Si</div>
+        <div class="sino-btn" id="sino-visible-no" onclick="sino('visible','no')">No</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:8px">
+      <label>Observaciones <span class="opt">(opcional)</span></label>
+      <textarea id="obs-material" placeholder="Detalles adicionales sobre el material..." oninput="guardarBorrador()"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Fotos material BF
+      <span style="font-size:.68rem;font-weight:400;text-transform:none;color:var(--gris-3)">(minimo 1 — maximo 6)</span>
+    </div>
+    <div class="foto-btns">
+      <div class="foto-btn">
+        <input type="file" id="input-bf-cam" accept="image/*" capture="environment" multiple>
+        <img class="vec" src="vector_camara_t-sin_fondo.png" alt="Camara">
+        <span>Tomar foto</span>
+      </div>
+      <div class="foto-btn">
+        <input type="file" id="input-bf-gal" accept="image/*" multiple>
+        <img class="vec" src="vector_camara_tor-sin_fondo.png" alt="Galeria">
+        <span>Desde galeria</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-bf" style="width:0%"></div></div>
+    <div class="foto-counter warn" id="cnt-bf">Sin fotos — minimo 1 requerida</div>
+    <div class="fotos-grid" id="grid-bf"></div>
+  </div>
+</div>
+
+<!-- PASO 3 — COMPETENCIA -->
+<div class="paso" id="paso-3">
+  <div class="alerta" id="alerta-3"></div>
+  <div class="card">
+    <div class="card-title">Competencia</div>
+
+    <div class="field">
+      <label>Hay material de otros bancos o medios de pago en el local <span class="req">*</span></label>
+      <div class="sino-btns">
+        <div class="sino-btn" id="sino-hayComp-si" onclick="sino('hayComp','si')">Si</div>
+        <div class="sino-btn" id="sino-hayComp-no" onclick="sino('hayComp','no')">No</div>
+      </div>
+    </div>
+
+    <div class="cond" id="sec-hayComp-si">
+      <div class="field">
+        <label>Marcas identificadas <span class="req">*</span></label>
+        <div class="chk-simple" id="chk-marcas"></div>
+        <div class="obs-wrap" id="obs-marcas-wrap">
+          <label>Indicar que otro banco o medio de pago</label>
+          <textarea id="obs-marcas" placeholder="Nombre del banco o medio de pago..."></textarea>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Como esta exhibido respecto al material de Banco Familiar <span class="req">*</span></label>
+        <div class="opciones">
+          <div class="opcion" data-campo="visibilidad_vs_bf" data-val="Mas visible que BF" onclick="elegirOpcion(this,'visibilidad_vs_bf','Mas visible que BF')"><div class="radio"></div>Mas visible que BF</div>
+          <div class="opcion" data-campo="visibilidad_vs_bf" data-val="Visibilidad similar a BF" onclick="elegirOpcion(this,'visibilidad_vs_bf','Visibilidad similar a BF')"><div class="radio"></div>Visibilidad similar a BF</div>
+          <div class="opcion" data-campo="visibilidad_vs_bf" data-val="Menos visible que BF" onclick="elegirOpcion(this,'visibilidad_vs_bf','Menos visible que BF')"><div class="radio"></div>Menos visible que BF</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>La competencia tiene promocion activa exhibida <span class="req">*</span></label>
+        <div class="sino-btns">
+          <div class="sino-btn" id="sino-hayPromo-si" onclick="sino('hayPromo','si')">Si</div>
+          <div class="sino-btn" id="sino-hayPromo-no" onclick="sino('hayPromo','no')">No</div>
+        </div>
+        <div class="cond" id="sec-hayPromo-si" style="margin-top:8px">
+          <textarea id="obs-promo-comp" placeholder="Describir la promocion de la competencia..." oninput="guardarBorrador()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card cond" id="sec-foto-comp">
+    <div class="card-title">Fotos competencia
+      <span style="font-size:.68rem;font-weight:400;text-transform:none;color:var(--gris-3)">(minimo 1 — maximo 4)</span>
+    </div>
+    <div class="foto-btns">
+      <div class="foto-btn">
+        <input type="file" id="input-comp-cam" accept="image/*" capture="environment" multiple>
+        <img class="vec" src="vector_camara_t-sin_fondo.png" alt="Camara">
+        <span>Tomar foto</span>
+      </div>
+      <div class="foto-btn">
+        <input type="file" id="input-comp-gal" accept="image/*" multiple>
+        <img class="vec" src="vector_camara_tor-sin_fondo.png" alt="Galeria">
+        <span>Desde galeria</span>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-comp" style="width:0%"></div></div>
+    <div class="foto-counter" id="cnt-comp">Sin fotos</div>
+    <div class="fotos-grid" id="grid-comp"></div>
+  </div>
+</div>
+
+<!-- PASO 4 — CIERRE -->
+<div class="paso" id="paso-4">
+  <div class="alerta" id="alerta-4"></div>
+  <div class="card">
+    <div class="card-title">Cierre</div>
+    <div class="field">
+      <label>El encargado conoce la promocion activa de Banco Familiar <span class="req">*</span></label>
+      <div class="opciones">
+        <div class="opcion" data-campo="encargado_conoce_promo" data-val="Si" onclick="elegirOpcion(this,'encargado_conoce_promo','Si')"><div class="radio"></div>Si</div>
+        <div class="opcion" data-campo="encargado_conoce_promo" data-val="Parcialmente" onclick="elegirOpcion(this,'encargado_conoce_promo','Parcialmente')"><div class="radio"></div>Parcialmente</div>
+        <div class="opcion" data-campo="encargado_conoce_promo" data-val="No" onclick="elegirOpcion(this,'encargado_conoce_promo','No')"><div class="radio"></div>No</div>
+        <div class="opcion" data-campo="encargado_conoce_promo" data-val="Sin encargado disponible" onclick="elegirOpcion(this,'encargado_conoce_promo','Sin encargado disponible')"><div class="radio"></div>Sin encargado disponible</div>
+        <div class="opcion" data-campo="encargado_conoce_promo" data-val="No se pudo ingresar al local" onclick="elegirOpcion(this,'encargado_conoce_promo','No se pudo ingresar al local')"><div class="radio"></div>No se pudo ingresar al local</div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Nombre del encargado <span class="opt">(opcional)</span></label>
+      <input type="text" id="inp-encargado" class="search-input"
+        placeholder="Nombre del encargado..." oninput="guardarBorrador()" autocomplete="off">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Observaciones generales</div>
+    <textarea id="observaciones" placeholder="Observaciones generales del relevamiento..." oninput="guardarBorrador()"></textarea>
+  </div>
+</div>
+
+</div>
+
+<div class="nav-bar">
+  <button class="btn-nav btn-prev" id="btn-prev" onclick="navPrev()" style="display:none">Atras</button>
+  <button class="btn-nav btn-next" id="btn-next" onclick="navNext()">Siguiente</button>
+</div>
+
+<script>
+const API_URL     = 'https://script.google.com/macros/s/AKfycbxp4EyQikaMC89MY_ShzLVvJ3iq_wEribCu6f9zd-Ienepa9hkU9t8c7A0f37LBwLXHQQ/exec';
+const STORAGE_KEY = 'bf_padre_v1';
+const TOTAL       = 5;
+
+const S = {
+  paso:0, pasoMax:0,
+  sucursales:[], localSel:null,
+  resp:{}, sino:{visible:null, hayComp:null, hayPromo:null},
+  mat:{tablentent_a4:null, calco:null, cubre_sensor:null, totem:null},
+  chk:{marcas:[]},
+  fotos:{bf:[], comp:[]},
+  enviando:false,
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const hoy = new Date();
+  document.getElementById('fecha-hoy').textContent =
+    hoy.toLocaleDateString('es-PY',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  showOverlay('Cargando datos...');
+  fetch(API_URL)
+    .then(r => r.json())
+    .then(d => {
+      try { localStorage.setItem(STORAGE_KEY+'_cfg', JSON.stringify(d)); } catch(e){}
+      init(d);
+    })
+    .catch(() => {
+      const raw = localStorage.getItem(STORAGE_KEY+'_cfg');
+      if (raw) { try { init(JSON.parse(raw)); toast('Usando datos guardados','err'); } catch(_){ hideOverlay(); toast('Error al cargar','err'); } }
+      else { hideOverlay(); toast('Error al cargar. Verifica tu conexion.','err'); }
+    });
+});
+
+function init(d) {
+  hideOverlay();
+  if (!d.ok) { toast('Error: '+d.error,'err'); return; }
+  S.sucursales = d.sucursales || [];
+
+  poblarSelect('sel-fiscalizador', d.fiscalizadores || [], 'Seleccionar fiscalizador...');
+  poblarMarcas(d.logica || []);
+  initBuscador();
+  initFotos();
+  document.getElementById('sel-fiscalizador').addEventListener('change', () => { guardarBorrador(); actualizarNav(); });
+  cargarBorrador();
+  actualizarNav();
+}
+
+function poblarSelect(id, lista, ph) {
+  const s = document.getElementById(id);
+  s.innerHTML = '<option value="" disabled selected>'+ph+'</option>';
+  lista.forEach(v => { const o = document.createElement('option'); o.value = o.textContent = v; s.appendChild(o); });
+}
+
+function poblarMarcas(logica) {
+  const fila = logica.find(f => f.campo === 'marcas_identificadas');
+  const opciones = fila ? fila.opciones : ['Banco Continental','Banco Itau','Banco GNB','Visanet / Bancard','Personal Pay','Otro'];
+  const cont = document.getElementById('chk-marcas');
+  cont.innerHTML = '';
+  opciones.forEach(op => {
+    const d = document.createElement('div');
+    d.className = 'chk-s'; d.dataset.key = 'marcas'; d.dataset.val = op;
+    d.innerHTML = '<div class="chk-box"></div>'+op;
+    d.addEventListener('click', () => toggleChk(d, 'marcas', op));
+    cont.appendChild(d);
+  });
+}
+
+function selMatOpt(el, campo, val) {
+  document.querySelectorAll('.mat-opt[data-campo="'+campo+'"]').forEach(o => o.className = 'mat-opt');
+  const clase = val === 'Colocado' ? 'colocado' : val === 'Faltante' ? 'faltante' : 'no-corresponde';
+  el.className = 'mat-opt '+clase;
+  S.mat[campo] = val;
+  guardarBorrador(); actualizarNav();
+}
+
+function elegirOpcion(el, campo, val) {
+  document.querySelectorAll('.opcion[data-campo="'+campo+'"]').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  S.resp[campo] = val;
+  guardarBorrador(); actualizarNav();
+}
+
+function sino(key, val) {
+  S.sino[key] = val;
+  const bsi = document.getElementById('sino-'+key+'-si');
+  const bno = document.getElementById('sino-'+key+'-no');
+  if (bsi) bsi.className = 'sino-btn'+(val==='si'?' si':'');
+  if (bno) bno.className = 'sino-btn'+(val==='no'?' no':'');
+  const secSi = document.getElementById('sec-'+key+'-si');
+  const secNo = document.getElementById('sec-'+key+'-no');
+  if (secSi) secSi.classList.toggle('on', val==='si');
+  if (secNo) secNo.classList.toggle('on', val==='no');
+  if (key === 'hayComp') {
+    document.getElementById('sec-foto-comp').classList.toggle('on', val==='si');
+    if (val === 'no') {
+      S.chk.marcas = [];
+      S.sino.hayPromo = null;
+      document.querySelectorAll('[data-key="marcas"]').forEach(el => el.classList.remove('sel'));
+      const bpsi = document.getElementById('sino-hayPromo-si');
+      const bpno = document.getElementById('sino-hayPromo-no');
+      if (bpsi) bpsi.className = 'sino-btn';
+      if (bpno) bpno.className = 'sino-btn';
+    }
+  }
+  guardarBorrador(); actualizarNav();
+}
+
+function toggleChk(el, key, val) {
+  el.classList.toggle('sel');
+  if (el.classList.contains('sel')) { if (!S.chk[key].includes(val)) S.chk[key].push(val); }
+  else { S.chk[key] = S.chk[key].filter(v => v !== val); }
+  const ow = document.getElementById('obs-'+key+'-wrap');
+  if (ow) {
+    const tieneOtro = S.chk[key].some(v => v.toLowerCase().includes('otro') || v.toLowerCase().includes('otra'));
+    ow.classList.toggle('on', tieneOtro);
+    if (!tieneOtro) { const ta = document.getElementById('obs-'+key); if (ta) ta.value = ''; }
+  }
+  guardarBorrador(); actualizarNav();
+}
+
+function initBuscador() {
+  const inp = document.getElementById('buscar-local');
+  const drop = document.getElementById('dropdown-locales');
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim().toLowerCase();
+    drop.innerHTML = '';
+    if (!q) { drop.classList.remove('open'); return; }
+    const hits = S.sucursales.filter(l =>
+      (l.aliado||'').toLowerCase().includes(q) ||
+      (l.tienda||'').toLowerCase().includes(q) ||
+      (l.shopping||'').toLowerCase().includes(q)
+    ).slice(0,30);
+    if (!hits.length) {
+      drop.innerHTML = '<div class="dropdown-item" style="color:var(--gris-3)">Sin resultados</div>';
+    } else {
+      hits.forEach(local => {
+        const d = document.createElement('div');
+        d.className = 'dropdown-item';
+        d.innerHTML = '<div><strong>'+local.tienda+'</strong></div><small>'+local.shopping+' · '+local.aliado+'</small>';
+        d.addEventListener('click', () => elegirLocal(local));
+        drop.appendChild(d);
+      });
+    }
+    drop.classList.add('open');
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('campo-local').contains(e.target)) drop.classList.remove('open');
+  });
+  document.getElementById('clear-local').addEventListener('click', () => {
+    S.localSel = null;
+    document.getElementById('local-badge').classList.remove('show');
+    inp.value = '';
+    guardarBorrador(); actualizarNav();
+  });
+}
+
+function elegirLocal(local) {
+  S.localSel = local;
+  document.getElementById('buscar-local').value = '';
+  document.getElementById('dropdown-locales').classList.remove('open');
+  document.getElementById('badge-txt').textContent = local.tienda + ' — ' + local.shopping;
+  document.getElementById('local-badge').classList.add('show');
+  guardarBorrador(); actualizarNav();
+}
+
+function initFotos() {
+  [['bf-cam','bf'],['bf-gal','bf'],['comp-cam','comp'],['comp-gal','comp']].forEach(([id,tipo]) => {
+    const el = document.getElementById('input-'+id); if (!el) return;
+    el.addEventListener('change', e => { procArchivos(e.target.files, tipo); e.target.value = ''; });
+  });
+}
+
+function procArchivos(files, tipo) {
+  const max = tipo === 'bf' ? 6 : 4;
+  const libre = max - S.fotos[tipo].length;
+  if (libre <= 0) { toast('Maximo '+max+' fotos','err'); return; }
+  [...files].slice(0, libre).forEach(f => { if (f.type.startsWith('image/')) procFoto(f, tipo); });
+}
+
+function procFoto(file, tipo) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const loc = (S.localSel ? S.localSel.tienda+'-'+S.localSel.shopping : 'LOCAL')
+      .replace(/[^A-Z0-9]/gi,'_').toUpperCase().slice(0,30);
+    const d = new Date();
+    const fch = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+    const nom = tipo.toUpperCase()+'_'+loc+'_'+fch+'_'+String(S.fotos[tipo].length+1).padStart(2,'0')+'.jpg';
+    S.fotos[tipo].push({ dataUrl: e.target.result, nombre: nom });
+    renderFotos(tipo); guardarBorrador(); actualizarNav();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderFotos(tipo) {
+  const max = tipo === 'bf' ? 6 : 4;
+  const grid = document.getElementById('grid-'+tipo);
+  const cnt  = document.getElementById('cnt-'+tipo);
+  const prog = document.getElementById('prog-'+tipo);
+  if (!grid) return;
+  const n = S.fotos[tipo].length;
+  grid.innerHTML = '';
+  S.fotos[tipo].forEach((f,i) => {
+    const d = document.createElement('div'); d.className = 'thumb';
+    d.innerHTML = '<img src="'+f.dataUrl+'" alt="foto '+(i+1)+'">'
+      +'<span class="num">'+(i+1)+'</span>'
+      +'<button class="del" onclick="delFoto(\''+tipo+'\','+i+')">x</button>';
+    grid.appendChild(d);
+  });
+  if (prog) prog.style.width = Math.round(n/max*100)+'%';
+  if (tipo === 'bf') {
+    cnt.className = 'foto-counter '+(n>=1?'ok':'warn');
+    cnt.textContent = n===0 ? 'Sin fotos — minimo 1 requerida' : n+' de '+max+' fotos';
+  } else {
+    cnt.className = 'foto-counter '+(n>0?'ok':'');
+    cnt.textContent = n===0 ? 'Sin fotos' : n+' de '+max+' fotos';
+  }
+}
+
+function delFoto(tipo,i) { S.fotos[tipo].splice(i,1); renderFotos(tipo); guardarBorrador(); actualizarNav(); }
+
+function camposFaltantes(n) {
+  const f = [];
+  if (n===0) {
+    if (!document.getElementById('sel-fiscalizador').value) f.push('Fiscalizador');
+  }
+  if (n===1) {
+    if (!S.localSel) f.push('Local');
+  }
+  if (n===2) {
+    if (!S.mat.tablentent_a4) f.push('Estado Tablentent A4');
+    if (!S.mat.calco) f.push('Estado Calco');
+    if (!S.mat.cubre_sensor) f.push('Estado Cubre sensor');
+    if (!S.mat.totem) f.push('Estado Totem');
+    if (!S.resp.estado_material) f.push('Estado general del material');
+    if (!S.sino.visible) f.push('Si el material esta visible');
+    if (S.fotos.bf.length < 1) f.push('Al menos 1 foto del material BF');
+  }
+  if (n===3) {
+    if (!S.sino.hayComp) f.push('Si hay material de competencia');
+    if (S.sino.hayComp==='si') {
+      if (S.chk.marcas.length===0) f.push('Marcas de competencia identificadas');
+      if (S.chk.marcas.some(v=>v.includes('Otro'))&&!document.getElementById('obs-marcas').value.trim())
+        f.push('Especificar que otro banco o medio de pago');
+      if (!S.resp.visibilidad_vs_bf) f.push('Visibilidad de la competencia vs BF');
+      if (!S.sino.hayPromo) f.push('Si la competencia tiene promo activa');
+      if (S.fotos.comp.length < 1) f.push('Al menos 1 foto de la competencia');
+    }
+  }
+  if (n===4) {
+    if (!S.resp.encargado_conoce_promo) f.push('Si el encargado conoce la promocion');
+  }
+  return f;
+}
+
+function pasoValido(n) { return camposFaltantes(n).length === 0; }
+
+function mostrarAlerta(n) {
+  const el = document.getElementById('alerta-'+n); if (!el) return;
+  const f = camposFaltantes(n);
+  if (!f.length) { el.className='alerta'; el.innerHTML=''; return; }
+  el.className = 'alerta on';
+  el.innerHTML = 'Completa los siguientes campos:<ul>'+f.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function actualizarNav() {
+  const prev = document.getElementById('btn-prev');
+  const next = document.getElementById('btn-next');
+  prev.style.display = S.paso===0 ? 'none' : 'block';
+  next.textContent = S.paso===TOTAL-1 ? 'Enviar' : 'Siguiente';
+  next.disabled = false; next.className = 'btn-nav btn-next';
+  for (let i=0; i<TOTAL; i++) {
+    const tab = document.getElementById('tab-'+i);
+    if (i===S.paso) { tab.className='step-btn active'; tab.onclick=null; }
+    else if (i<=S.pasoMax) { tab.className='step-btn done'; tab.onclick=()=>irA(i); }
+    else { tab.className='step-btn'; tab.onclick=null; }
+  }
+}
+
+function navNext() {
+  if (S.paso===TOTAL-1) { if (pasoValido(S.paso)) enviar(); else { mostrarAlerta(S.paso); agitar(); } return; }
+  if (!pasoValido(S.paso)) { mostrarAlerta(S.paso); agitar(); return; }
+  const al = document.getElementById('alerta-'+S.paso);
+  if (al) { al.className='alerta'; al.innerHTML=''; }
+  irA(S.paso+1);
+}
+
+function navPrev() { if (S.paso>0) irA(S.paso-1); }
+
+function agitar() {
+  const btn = document.getElementById('btn-next');
+  btn.classList.add('incompleto');
+  setTimeout(() => btn.classList.remove('incompleto'), 500);
+}
+
+function irA(n) {
+  document.getElementById('paso-'+S.paso).classList.remove('active');
+  S.paso = n; if (n>S.pasoMax) S.pasoMax = n;
+  document.getElementById('paso-'+S.paso).classList.add('active');
+  window.scrollTo(0,0); guardarBorrador(); actualizarNav();
+}
+
+function guardarBorrador() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      paso:S.paso, pasoMax:S.pasoMax, localSel:S.localSel,
+      resp:S.resp, sino:S.sino, mat:S.mat, chk:S.chk,
+      fiscalizador: document.getElementById('sel-fiscalizador').value,
+      encargado:    document.getElementById('inp-encargado')?.value||'',
+      obsMaterial:  document.getElementById('obs-material')?.value||'',
+      obsMarcas:    document.getElementById('obs-marcas')?.value||'',
+      obsPromo:     document.getElementById('obs-promo-comp')?.value||'',
+      observaciones:document.getElementById('observaciones')?.value||'',
+    }));
+  } catch(e){}
+}
+
+function cargarBorrador() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY); if (!raw) return;
+    const data = JSON.parse(raw);
+    S.resp      = data.resp||{};
+    S.localSel  = data.localSel||null;
+    S.sino      = Object.assign({visible:null,hayComp:null,hayPromo:null}, data.sino||{});
+    S.mat       = Object.assign({tablentent_a4:null,calco:null,cubre_sensor:null,totem:null}, data.mat||{});
+    S.chk       = Object.assign({marcas:[]}, data.chk||{});
+    S.pasoMax   = data.pasoMax||0;
+
+    if (data.fiscalizador) document.getElementById('sel-fiscalizador').value = data.fiscalizador;
+    if (data.encargado)    document.getElementById('inp-encargado').value = data.encargado;
+    if (data.obsMaterial)  document.getElementById('obs-material').value = data.obsMaterial;
+    if (data.obsMarcas)    document.getElementById('obs-marcas').value = data.obsMarcas;
+    if (data.obsPromo)     document.getElementById('obs-promo-comp').value = data.obsPromo;
+    if (data.observaciones)document.getElementById('observaciones').value = data.observaciones;
+
+    if (S.localSel) {
+      document.getElementById('badge-txt').textContent = S.localSel.tienda+' — '+S.localSel.shopping;
+      document.getElementById('local-badge').classList.add('show');
+    }
+
+    Object.entries(S.resp).forEach(([campo,val]) => {
+      const el = document.querySelector('.opcion[data-campo="'+campo+'"][data-val="'+val+'"]');
+      if (el) el.classList.add('sel');
+    });
+
+    Object.entries(S.mat).forEach(([campo,val]) => {
+      if (!val) return;
+      const el = document.querySelector('.mat-opt[data-campo="'+campo+'"][data-val="'+val+'"]');
+      if (el) selMatOpt(el, campo, val);
+    });
+
+    Object.entries(S.sino).forEach(([key,val]) => {
+      if (!val) return;
+      const bsi = document.getElementById('sino-'+key+'-si');
+      const bno = document.getElementById('sino-'+key+'-no');
+      if (bsi) bsi.className = 'sino-btn'+(val==='si'?' si':'');
+      if (bno) bno.className = 'sino-btn'+(val==='no'?' no':'');
+      const secSi = document.getElementById('sec-'+key+'-si');
+      if (secSi) secSi.classList.toggle('on', val==='si');
+    });
+
+    if (S.sino.hayComp==='si') document.getElementById('sec-foto-comp').classList.add('on');
+
+    S.chk.marcas.forEach(val => {
+      const el = document.querySelector('.chk-s[data-key="marcas"][data-val="'+val+'"]');
+      if (el) el.classList.add('sel');
+    });
+    const tieneOtro = S.chk.marcas.some(v => v.toLowerCase().includes('otro'));
+    if (tieneOtro) document.getElementById('obs-marcas-wrap')?.classList.add('on');
+
+    if (S.localSel || data.fiscalizador) document.getElementById('draft-banner').style.display = 'flex';
+    irA(Math.min(data.paso||0, S.pasoMax));
+  } catch(e){}
+}
+
+function limpiarBorrador() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+  document.getElementById('draft-banner').style.display = 'none';
+  resetForm();
+}
+
+function cerrarYReset() {
+  document.getElementById('modal-exito').classList.remove('on');
+  resetForm();
+}
+
+function enviar() {
+  if (S.enviando) return;
+  S.enviando = true;
+  const btn = document.getElementById('btn-next');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  showOverlay('Subiendo fotos y guardando...', 'Esto puede tomar unos segundos');
+
+  const payload = {
+    fiscalizador:          document.getElementById('sel-fiscalizador').value,
+    aliado:                S.localSel?.aliado||'',
+    tienda:                S.localSel?.tienda||'',
+    shopping:              S.localSel?.shopping||'',
+    tablentent_a4:         S.mat.tablentent_a4||'',
+    calco:                 S.mat.calco||'',
+    cubre_sensor:          S.mat.cubre_sensor||'',
+    totem:                 S.mat.totem||'',
+    estado_material:       S.resp.estado_material||'',
+    material_visible:      S.sino.visible==='si'?'Si':'No',
+    observaciones:         document.getElementById('obs-material')?.value?.trim()||'',
+    hay_competencia:       S.sino.hayComp==='si'?'Si':'No',
+    marcas_identificadas:  S.chk.marcas.join(', '),
+    tipo_material_comp:    document.getElementById('obs-marcas')?.value?.trim()||'',
+    visibilidad_vs_bf:     S.resp.visibilidad_vs_bf||'',
+    hay_promo_activa:      S.sino.hayPromo==='si'?'Si':'No',
+    descripcion_promo:     document.getElementById('obs-promo-comp')?.value?.trim()||'',
+    encargado_conoce_promo:S.resp.encargado_conoce_promo||'',
+    nombre_encargado:      document.getElementById('inp-encargado')?.value?.trim()||'',
+    observaciones_generales: document.getElementById('observaciones')?.value?.trim()||'',
+    fotos_bf:   S.fotos.bf.map(f=>({base64:f.dataUrl, nombre:f.nombre})),
+    fotos_competencia: S.fotos.comp.map(f=>({base64:f.dataUrl, nombre:f.nombre})),
+  };
+
+  fetch(API_URL, {method:'POST', body:JSON.stringify(payload)})
+    .then(r => r.json())
+    .then(res => {
+      hideOverlay(); S.enviando = false;
+      if (res.ok) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+        document.getElementById('modal-local').textContent = (S.localSel?.tienda||'el local')+' — '+(S.localSel?.shopping||'');
+        document.getElementById('modal-exito').classList.add('on');
+      } else {
+        toast('Error: '+res.error,'err');
+        btn.disabled = false; btn.textContent = 'Enviar';
+      }
+    })
+    .catch(() => {
+      hideOverlay(); S.enviando = false;
+      toast('Error de conexion. Intenta de nuevo.','err');
+      btn.disabled = false; btn.textContent = 'Enviar';
+    });
+}
+
+function resetForm() {
+  S.paso=0; S.pasoMax=0; S.localSel=null;
+  S.resp={}; S.sino={visible:null,hayComp:null,hayPromo:null};
+  S.mat={tablentent_a4:null,calco:null,cubre_sensor:null,totem:null};
+  S.chk={marcas:[]}; S.fotos={bf:[],comp:[]}; S.enviando=false;
+
+  ['sel-fiscalizador','buscar-local','inp-encargado','observaciones',
+   'obs-material','obs-marcas','obs-promo-comp']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+
+  document.getElementById('local-badge').classList.remove('show');
+  document.getElementById('draft-banner').style.display = 'none';
+
+  ['sec-hayComp-si','sec-hayPromo-si','sec-foto-comp']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+
+  document.querySelectorAll('.opcion').forEach(o => o.classList.remove('sel'));
+  document.querySelectorAll('.chk-s').forEach(o => o.classList.remove('sel'));
+  document.querySelectorAll('.sino-btn').forEach(o => o.className='sino-btn');
+  document.querySelectorAll('.mat-opt').forEach(o => o.className='mat-opt');
+  document.querySelectorAll('.obs-wrap').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.alerta').forEach(el => { el.className='alerta'; el.innerHTML=''; });
+
+  ['bf','comp'].forEach(t => renderFotos(t));
+  for (let i=0; i<TOTAL; i++)
+    document.getElementById('paso-'+i).classList.toggle('active', i===0);
+  actualizarNav();
+}
+
+function showOverlay(msg, sub) {
+  document.getElementById('overlay-msg').textContent = msg||'Procesando...';
+  document.getElementById('overlay-sub').textContent = sub||'';
+  document.getElementById('overlay').classList.add('on');
+}
+function hideOverlay() { document.getElementById('overlay').classList.remove('on'); }
+
+let _tt;
+function toast(msg, tipo) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast '+tipo;
+  clearTimeout(_tt);
+  requestAnimationFrame(() => el.classList.add('on'));
+  _tt = setTimeout(() => el.classList.remove('on'), 5000);
+}
+</script>
+</body>
+</html>
