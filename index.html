@@ -449,8 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fecha-hoy').textContent =
     hoy.toLocaleDateString('es-PY',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   showOverlay('Cargando datos...');
-  fetch(API_URL)
-    .then(r => r.json())
+  fetch(API_URL, {redirect:'follow'})
+    .then(r => r.text())
+    .then(t => {
+      let d; try { d = JSON.parse(t); } catch(e) { throw new Error('Respuesta invalida'); }
+      return d;
+    })
     .then(d => {
       try { localStorage.setItem(STORAGE_KEY+'_cfg', JSON.stringify(d)); } catch(e){}
       init(d);
