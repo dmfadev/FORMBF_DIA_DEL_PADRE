@@ -150,6 +150,10 @@ textarea:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(0
 .modal-btn:hover{background:var(--azul-d)}
 
 .info-box{font-size:.76rem;color:#1e3a8a;background:#e8f0fe;border-radius:6px;padding:7px 11px;margin-bottom:10px;border-left:3px solid var(--azul);line-height:1.4}
+.local-adicional-btn{width:100%;margin-top:10px;padding:11px;border:1.5px dashed var(--gris-3);border-radius:8px;background:var(--gris-1);font-size:.85rem;font-weight:600;color:var(--gris-3);cursor:pointer;text-align:center;transition:all .15s}
+.local-adicional-btn.activo{border-color:var(--azul);background:#e8f0fe;color:var(--azul);border-style:solid}
+.local-adicional-campos{display:none;margin-top:10px;padding:12px;background:#f8f9fa;border-radius:8px;border:1px solid var(--gris-2)}
+.local-adicional-campos.on{display:block}
 </style>
 </head>
 <body>
@@ -227,6 +231,23 @@ textarea:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(0
       <div class="local-badge" id="local-badge">
         <span id="badge-txt"></span>
         <button class="clear" id="clear-local">cambiar</button>
+      </div>
+    </div>
+    <div class="field">
+      <button class="local-adicional-btn" id="btn-local-adicional" onclick="toggleLocalAdicional()">
+        El local tiene otro nombre o no esta en la lista
+      </button>
+      <div class="local-adicional-campos" id="sec-local-adicional">
+        <div class="field">
+          <label>Nombre del local / tienda <span class="req">*</span></label>
+          <input type="text" id="inp-adicional-tienda" class="search-input"
+            placeholder="Nombre del local..." oninput="actualizarLocalAdicional()" autocomplete="off">
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Shopping o ubicacion <span class="req">*</span></label>
+          <input type="text" id="inp-adicional-shopping" class="search-input"
+            placeholder="Shopping, calle o referencia..." oninput="actualizarLocalAdicional()" autocomplete="off">
+        </div>
       </div>
     </div>
   </div>
@@ -588,6 +609,36 @@ function initBuscador() {
   });
 }
 
+function toggleLocalAdicional() {
+  const btn = document.getElementById('btn-local-adicional');
+  const sec = document.getElementById('sec-local-adicional');
+  const activo = sec.classList.toggle('on');
+  btn.classList.toggle('activo', activo);
+  if (!activo) {
+    document.getElementById('inp-adicional-tienda').value = '';
+    document.getElementById('inp-adicional-shopping').value = '';
+    if (S.localSel && S.localSel.adicional) {
+      S.localSel = null;
+      document.getElementById('local-badge').classList.remove('show');
+    }
+  }
+  guardarBorrador(); actualizarNav();
+}
+
+function actualizarLocalAdicional() {
+  const tienda   = document.getElementById('inp-adicional-tienda').value.trim();
+  const shopping = document.getElementById('inp-adicional-shopping').value.trim();
+  if (tienda && shopping) {
+    S.localSel = { aliado: 'ADICIONAL', tienda, shopping, adicional: true };
+    document.getElementById('badge-txt').textContent = tienda + ' — ' + shopping;
+    document.getElementById('local-badge').classList.add('show');
+  } else {
+    S.localSel = null;
+    document.getElementById('local-badge').classList.remove('show');
+  }
+  guardarBorrador(); actualizarNav();
+}
+
 function elegirLocal(local) {
   S.localSel = local;
   document.getElementById('buscar-local').value = '';
@@ -830,6 +881,7 @@ function enviar() {
     aliado:                S.localSel?.aliado||'',
     tienda:                S.localSel?.tienda||'',
     shopping:              S.localSel?.shopping||'',
+    localAdicional:        S.localSel?.adicional ? 'Si' : 'No',
     tablentent_a4:         S.mat.tablentent_a4||'',
     calco:                 S.mat.calco||'',
     cubre_sensor:          S.mat.cubre_sensor||'',
